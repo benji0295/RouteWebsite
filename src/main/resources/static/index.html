@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shortest Airport Route</title>
+</head>
+<body>
+<h1>Find Shortest Airport Route</h1>
+<form id="routeForm">
+    <label for="departure">Departure Airport:</label>
+    <input type="text" id="departure" name="departure" required>
+    <br>
+    <label for="arrival">Arrival Airport:</label>
+    <input type="text" id="arrival" name="arrival" required>
+    <br>
+    <button type="submit">Find Route</button>
+</form>
+<p id="result"></p>
+
+<script>
+    document.getElementById('routeForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const departure = document.getElementById('departure').value;
+        const arrival = document.getElementById('arrival').value;
+
+        fetch(`/shortest-route?departure=${departure}&arrival=${arrival}`)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('result').innerText = data;
+            });
+    });
+</script>
+</body>
+</html>
