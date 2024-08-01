@@ -1,22 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shortest Airport Route</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative; /* Ensure container is positioned relative */
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label, input {
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 300px;
+            position: relative;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #5cb85c;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        #result {
+            margin-top: 20px;
+            color: #333;
+        }
+        .autocomplete-suggestions {
+            position: absolute;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 150px; /* Approx 3 items */
+            overflow-y: auto;
+            background-color: #fff;
+            z-index: 9999;
+        }
+        .autocomplete-suggestion {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .autocomplete-suggestion:hover {
+            background-color: #f4f4f9;
+        }
+    </style>
 </head>
 <body>
-<h1>Find Shortest Airport Route</h1>
-<form id="routeForm">
-    <label for="departure">Departure Airport:</label>
-    <input type="text" id="departure" name="departure" required>
-    <br>
-    <label for="arrival">Arrival Airport:</label>
-    <input type="text" id="arrival" name="arrival" required>
-    <br>
-    <button type="submit">Find Route</button>
-</form>
-<p id="result"></p>
+<div class="container">
+    <h1>Find Shortest Airport Route</h1>
+    <form id="routeForm">
+        <label for="departure">Departure Airport:</label>
+        <div style="position:relative; width: 100%;">
+            <input type="text" id="departure" name="departure" required>
+            <div id="departure-suggestions" class="autocomplete-suggestions"></div>
+        </div>
 
+        <label for="arrival">Arrival Airport:</label>
+        <div style="position:relative; width: 100%;">
+            <input type="text" id="arrival" name="arrival" required>
+            <div id="arrival-suggestions" class="autocomplete-suggestions"></div>
+        </div>
+
+        <button type="submit">Find Route</button>
+    </form>
+    <p id="result"></p>
+</div>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const airports = [];
+
+        fetch('/airports')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(airport => {
+                    airports.push({
+                        code: airport.code,
+                        name: airport.name
+                    });
+                });
+            });
+
+        function setupAutocomplete(inputId, suggestionsId) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+
+            input.addEventListener('input', function() {
+                const query = input.value.toLowerCase();
+                suggestions.innerHTML = '';
+
+                if (query.length < 2) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+
+                const filteredAirports = airports.filter(airport =>
+                    airport.code.toLowerCase().includes(query) ||
+                    airport.name.toLowerCase().includes(query)
+                );
+
+                filteredAirports.slice(0, 10).forEach(airport => {
+                    const suggestion = document.createElement('div');
+                    suggestion.classList.add('autocomplete-suggestion');
+                    suggestion.textContent = `${airport.code} (${airport.name})`;
+                    suggestion.addEventListener('click', function() {
+                        input.value = airport.code;
+                        suggestions.style.display = 'none';
+                    });
+                    suggestions.appendChild(suggestion);
+                });
+
+                suggestions.style.display = 'block';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!suggestions.contains(e.target) && e.target !== input) {
+                    suggestions.style.display = 'none';
+                }
+            });
+        }
+
+        setupAutocomplete('departure', 'departure-suggestions');
+        setupAutocomplete('arrival', 'arrival-suggestions');
+    });
+
     document.getElementById('routeForm').addEventListener('submit', function(event) {
         event.preventDefault();
         const departure = document.getElementById('departure').value;

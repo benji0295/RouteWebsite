@@ -6,6 +6,7 @@ import javax.annotation.PostConstruct;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AirportService {
@@ -38,6 +39,17 @@ public class AirportService {
         }
     }
 
+    public List<Map<String, String>> getAirports()
+    {
+        return airports.values().stream().map(airport -> {
+            Map<String, String> airportData = new HashMap<>();
+            airportData.put("code", airport.getCode());
+            airportData.put("name", airport.getName());
+            return airportData;
+        })
+                .collect(Collectors.toList());
+    }
+
     public String findShortestRoute(String departure, String arrival) {
         if (!airports.containsKey(departure) || !airports.containsKey(arrival)) {
             return "Invalid airport code.";
@@ -52,9 +64,10 @@ public class AirportService {
             return "No route found.";
         } else {
             StringBuilder result = new StringBuilder();
-            result.append("Shortest route: ").append(path);
-            int totalDistance = distances.get(arrival);
-            result.append(", Total distance: ").append(totalDistance).append(" km");
+            result.append("Shortest route: ").append(String.join(" -> ",path));
+            int totalDistanceKm = distances.get(arrival);
+            int totalDistanceMiles = (int) Math.round(totalDistanceKm * 0.621371);
+            result.append("\nTotal distance: ").append(totalDistanceKm).append(" km / ").append(totalDistanceMiles).append(" miles");
             return result.toString();
         }
     }

@@ -15,4 +15,11 @@ public class Airport {
     this.latitude = latitude;
     this.longitude = longitude;
   }
+  public String getCode() { return code; }
+
+  public String getName() { return name; }
+
+  public double getLatitude() { return latitude; }
+
+  public double getLongitude() { return longitude; }
 }
